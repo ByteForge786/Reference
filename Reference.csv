@@ -1,0 +1,21 @@
+id,name,email,is_sql,flag,description,category,date,address,phone,amount,url
+1234567,John Smith,john.smith@email.com,SELECT * FROM users,Y,Product manager with 5 years experience,Premium,2023-01-15,123 Main St New York NY 10001,+1-555-123-4567,$1500.00,https://example.com/profile1
+EMP102,Maria Garcia,mgarcia@company.net,UPDATE customers SET status='active',N,Senior developer specializing in Python,Basic,2023-02-28,456 Park Ave Chicago IL 60601,212-555-7890,$2750.50,https://website.com/user2
+A98B45C,James Wilson,jwilson@domain.org,INSERT INTO orders VALUES,Y,Marketing specialist focused on digital campaigns,Premium,2023-03-10,789 Beach Rd Miami FL 33101,333.444.5555,$950.75,https://site.net/page3
+890123,Sarah Johnson,sarah.j@gmail.com,DELETE FROM cart,N,Data analyst with expertise in SQL,Trial,2023-04-22,321 Oak Lane Seattle WA 98101,(444) 555-6666,$3200.25,https://portal.com/user4
+UUID-123-456,Robert Lee,rlee@outlook.com,SELECT COUNT(*) FROM sales,Y,Project coordinator for tech initiatives,Premium,2023-05-05,654 Pine St Austin TX 78701,555.666.7777,$1875.50,https://app.io/profile5
+9876543,Lisa Chen,lchen@work.com,CREATE TABLE employees,N,UX designer creating mobile interfaces,Basic,2023-06-18,987 Maple Dr Boston MA 02101,666-777-8888,$2100.00,https://platform.net/user6
+XY-789-ABC,David Brown,dbrown@mail.net,DROP DATABASE old_data,Y,Content writer for tech blogs,Trial,2023-07-30,147 Cedar Ave Portland OR 97201,777-888-9999,$1250.75,https://system.com/page7
+456789,Emma Davis,edavis@company.org,TRUNCATE TABLE logs,N,Financial analyst in tech sector,Premium,2023-08-12,258 Elm St Denver CO 80201,888.999.0000,$4500.50,https://web.app/profile8
+ID#12345,Michael Kim,mkim@domain.com,ALTER TABLE users ADD,Y,Software architect for cloud systems,Basic,2023-09-25,369 Birch Rd San Francisco CA 94101,999-000-1111,$3750.25,https://service.io/user9
+7654321,Anna White,awhite@email.net,CREATE INDEX idx_name,N,HR specialist in tech recruitment,Trial,2023-10-08,741 Willow Lane San Diego CA 92101,000.111.2222,$2900.00,https://tool.com/page10
+AB12345CD,Thomas Moore,tmoore@work.org,GRANT SELECT ON db,Y,Cloud infrastructure engineer,Premium,2023-11-20,852 Palm St Las Vegas NV 89101,111-222-3333,$1600.75,https://app.net/profile11
+234567,Jessica Taylor,jtaylor@mail.com,REVOKE ALL PRIVILEGES,N,Business analyst for SaaS products,Basic,2023-12-03,963 Spruce Ave Phoenix AZ 85001,222.333.4444,$2250.50,https://portal.io/user12
+REF#98765,Kevin Patel,kpatel@company.net,CREATE PROCEDURE sp_name,Y,Technical writer for API docs,Trial,2024-01-15,159 Cherry Dr Nashville TN 37201,333-444-5555,$1950.25,https://system.net/page13
+5678901,Rachel Green,rgreen@domain.org,BEGIN TRANSACTION,N,Quality assurance engineer,Premium,2024-02-28,753 Oak St Atlanta GA 30301,444.555.6666,$3100.00,https://platform.com/profile14
+123-ABC-456,Daniel Martinez,dmartinez@outlook.com,COMMIT TRANSACTION,Y,DevOps engineer managing CI/CD,Basic,2024-03-10,951 Pine Ave Dallas TX 75201,555-666-7777,$2800.75,https://tool.io/user15
+8765432,Michelle Wong,mwong@mail.net,ROLLBACK TRANSACTION,N,Frontend developer for React apps,Trial,2024-04-22,357 Maple St Houston TX 77001,666.777.8888,$1700.50,https://service.com/page16
+BC987XY,Christopher Lee,clee@work.com,CREATE TRIGGER tr_name,Y,Backend developer for APIs,Premium,2024-05-05,159 Cedar Lane Miami FL 33101,777-888-9999,$4200.25,https://web.net/profile17
+345678,Amanda Clark,aclark@company.org,CREATE VIEW v_name,N,Data scientist in ML,Basic,2024-06-18,753 Birch Ave Chicago IL 60601,888.999.0000,$3500.00,https://app.com/user18
+CUST#1234,Ryan Thompson,rthompson@domain.net,DECLARE @var VARCHAR,Y,System administrator,Trial,2024-07-30,951 Elm Dr New York NY 10001,999-000-1111,$2600.75,https://portal.net/page19
+9012345,Laura Rodriguez,lrodriguez@email.com,EXEC sp_help,N,Mobile app developer,Premium,2024-08-12,357 Palm Lane Los Angeles CA 90001,000.111.2222,$1800.50,https://system.io/profile20
