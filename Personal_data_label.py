@@ -5,11 +5,6 @@ def classify_personal_data(attributes):
     """
     Process attributes marked as Personal Data and classify them as Sensitive/Non-Sensitive PII.
     Only rows with label='Personal Data' are sent for classification.
-    
-    Args:
-        attributes: List of tuples containing (attribute_name, description, label)
-    Returns:
-        List of tuples containing (attribute_name, description, final_classification)
     """
     classified_data = []
     
@@ -45,24 +40,37 @@ Please classify this attribute as either "Sensitive PII" or "Non-Sensitive PII".
                 print(f"Error classifying {attribute_name}: {str(e)}")
                 classified_data.append((attribute_name, description, label))
         else:
-            # Keep non-Personal Data rows unchanged
             classified_data.append((attribute_name, description, label))
             
     return classified_data
 
 def main():
     try:
-        # Read input CSV
-        with open('personal_data.csv', 'r', encoding='utf-8') as file:
-            reader = csv.reader(file)
-            header = next(reader)  # Skip header row
-            attributes = [(row[0], row[1], row[2]) for row in reader]
+        # Try different encodings if needed
+        encodings = ['utf-8', 'utf-8-sig', 'latin-1', 'cp1252']
+        
+        for encoding in encodings:
+            try:
+                # Read input CSV
+                with open('personal_data.csv', 'r', encoding=encoding) as file:
+                    reader = csv.reader(file)
+                    header = next(reader)  # Skip header row
+                    attributes = [(row[0], row[1], row[2]) for row in reader]
+                print(f"Successfully read file with {encoding} encoding")
+                break
+            except UnicodeDecodeError:
+                continue
+            except Exception as e:
+                print(f"Error with {encoding} encoding: {str(e)}")
+                continue
+        else:
+            raise Exception("Could not read file with any of the attempted encodings")
 
         # Classify the data
         classified_data = classify_personal_data(attributes)
 
-        # Write results back to CSV
-        with open('personal_data.csv', 'w', newline='', encoding='utf-8') as file:
+        # Write results back to CSV with the same encoding that worked for reading
+        with open('personal_data.csv', 'w', newline='', encoding=encoding) as file:
             writer = csv.writer(file)
             writer.writerow(['attribute_name', 'description', 'classification'])
             writer.writerows(classified_data)
