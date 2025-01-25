@@ -3,7 +3,6 @@ import pandas as pd
 from datasets import Dataset
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 label2id = {
     "sensitive pii": 0, 
     "non sensitive pii": 1, 
@@ -27,6 +26,9 @@ def load_dataset(model_type: str = "") -> Dataset:
     # Shuffle the entire dataset
     dataset_pandas = dataset_pandas.sample(frac=1, random_state=42).reset_index(drop=True)
     
+    # Store original labels before conversion
+    original_labels = dataset_pandas["label"].copy()
+    
     if model_type == "AutoModelForSequenceClassification":
         dataset_pandas["label"] = dataset_pandas["label"].map(label2id)
     
@@ -34,17 +36,17 @@ def load_dataset(model_type: str = "") -> Dataset:
     train_data = []
     test_data = []
     
-    # Track count per label
+    # Track count per label using original text labels
     label_counts = {label: 0 for label in label2id.keys()}
     
     # Go through shuffled data once and assign to train/test
-    for _, row in dataset_pandas.iterrows():
-        label = row['label']
-        if label_counts[label] < 300:  # First 300 go to train
-            train_data.append(row)
-            label_counts[label] += 1
+    for index, row in dataset_pandas.iterrows():
+        original_label = original_labels[index]  # Use original text label for counting
+        if label_counts[original_label] < 300:  # First 300 go to train
+            train_data.append(row.to_dict())
+            label_counts[original_label] += 1
         else:  # Rest go to test
-            test_data.append(row)
+            test_data.append(row.to_dict())
     
     # Convert lists to dataframes
     train_dataset = pd.DataFrame(train_data)
@@ -68,6 +70,6 @@ def load_dataset(model_type: str = "") -> Dataset:
     return dataset_dict
 
 if __name__ == "__main__":
-    dataset = load_dataset()
+    dataset = load_dataset("AutoModelForSequenceClassification")
     print("\nFull dataset structure:")
     print(dataset)
