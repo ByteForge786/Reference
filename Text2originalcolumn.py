@@ -5,16 +5,17 @@ def process_csv_fast(input_file, output_file, text_column_name):
         # Read CSV
         df = pd.read_csv(input_file)
         
-        # Extract using string operations (much faster than apply)
-        df['temp'] = df[text_column_name].str.split('Attribute Name:', expand=True)[1]
-        df['temp2'] = df['temp'].str.split('Description:', expand=True)
+        # Extract attribute name
+        df['attribute_name'] = (df[text_column_name]
+                              .str.split('Attribute Name:', expand=True)[1]
+                              .str.split('Description:', expand=True)[0]
+                              .str.strip())
         
-        # Create new columns
-        df['attribute_name'] = df['temp2'].str[0].str.strip()
-        df['enhanced_description'] = df['temp2'].str[1].str.split('Consider the privacy impact').str[0].str.strip()
-        
-        # Drop temporary columns
-        df = df.drop(['temp', 'temp2'], axis=1)
+        # Extract description
+        df['enhanced_description'] = (df[text_column_name]
+                                    .str.split('Description:', expand=True)[1]
+                                    .str.split('Consider the privacy impact', expand=True)[0]
+                                    .str.strip())
         
         # Save result
         df.to_csv(output_file, index=False)
