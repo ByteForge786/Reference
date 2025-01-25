@@ -1,47 +1,35 @@
 import pandas as pd
 
-def split_text_column(input_file, output_file, text_column_name):
+def process_csv_fast(input_file, output_file, text_column_name):
     try:
-        # Read the CSV file
+        # Read CSV
         df = pd.read_csv(input_file)
         
-        # Function to extract attribute name and description from text
-        def extract_info(text):
-            try:
-                # Split based on the pattern in your text column
-                parts = text.split("Description:", 1)  # Adjust split pattern if needed
-                
-                if len(parts) == 2:
-                    # Further clean attribute name
-                    attr_name = parts[0].replace("Attribute Name:", "").strip()
-                    description = parts[1].strip()
-                else:
-                    # If pattern not found, return empty values or handle as needed
-                    attr_name = ""
-                    description = text
-                
-                return pd.Series([attr_name, description])
-            
-            except Exception as e:
-                print(f"Error processing row: {text}")
-                return pd.Series(["", ""])
+        # Extract using string operations (much faster than apply)
+        df['temp'] = df[text_column_name].str.split('Attribute Name:', expand=True)[1]
+        df['temp2'] = df['temp'].str.split('Description:', expand=True)
         
-        # Create new columns by splitting the text column
-        df[['attribute_name', 'enhanced_description']] = df[text_column_name].apply(extract_info)
+        # Create new columns
+        df['attribute_name'] = df['temp2'].str[0].str.strip()
+        df['enhanced_description'] = df['temp2'].str[1].str.split('Consider the privacy impact').str[0].str.strip()
         
-        # Save to new CSV file
+        # Drop temporary columns
+        df = df.drop(['temp', 'temp2'], axis=1)
+        
+        # Save result
         df.to_csv(output_file, index=False)
-        print(f"Successfully created {output_file}")
+        print(f"Successfully processed {len(df)} rows")
         
-        # Display sample of processed data
-        print("\nSample of processed data:")
-        print(df.head())
+        # Quick sample check
+        print("\nFirst row sample:")
+        print(f"Attribute Name: {df['attribute_name'].iloc[0]}")
+        print(f"Description: {df['enhanced_description'].iloc[0]}")
         
     except Exception as e:
-        print(f"Error processing CSV: {e}")
+        print(f"Error: {e}")
 
 if __name__ == "__main__":
-    input_file = input("Enter input CSV file path: ")
-    output_file = input("Enter output CSV file path: ")
-    text_column = input("Enter the name of the text column to split: ")
-    split_text_column(input_file, output_file, text_column)
+    input_file = input("Input CSV path: ")
+    output_file = input("Output CSV path: ")
+    text_column = input("Text column name: ")
+    process_csv_fast(input_file, output_file, text_column)
