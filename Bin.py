@@ -1,3 +1,124 @@
+
+Let me refine the prompt further to make it absolutely clear, with even more explicit examples and stricter format definition.
+
+
+
+Key improvements in this version:
+1. More explicit rules for attribute naming
+2. Clearer examples of good vs bad attributes
+3. Stricter two-sentence description format
+4. More atomic, single-purpose attributes
+5. Better categorization examples
+
+The prompt now:
+1. Shows explicitly what to avoid
+2. Gives very specific examples
+3. Explains exactly how to structure descriptions
+4. Demonstrates proper attribute granularity
+5. Provides clear label criteria
+
+For example, instead of "employee_information" containing multiple elements, it shows how to break it down into:
+- employee_id
+- employee_name
+- employee_phone
+- employee_salary
+- employee_bank_account
+
+Each with:
+- First sentence: What it is and why it exists
+- Second sentence: Exactly what data it contains
+
+Would you like me to add more example sets or make any other clarifications?
+
+
+
+
+
+import json
+import csv
+import time
+import logging
+from typing import List, Dict
+from datetime import datetime
+
+def create_llm_prompt(batch_size: int) -> str:
+    prompt = """Generate individual PII attributes that are atomic (represent single pieces of information) with clear two-sentence descriptions.
+
+Rules for attribute names:
+1. Each attribute should represent ONE specific piece of information
+2. Name should clearly indicate what information it contains
+3. Use underscores to separate words
+4. Add suffixes that indicate specific content (_id, _name, _amount, etc.)
+
+Rules for descriptions:
+1. MUST be exactly two sentences
+2. First sentence: Explains what this attribute is and its purpose
+3. Second sentence: Lists the exact data elements this attribute contains
+
+Format for each attribute:
+attribute_name,description,label
+
+Example Set 1 - Employee Data:
+"employee_id","User's unique identifier assigned for internal system reference and access management. Individual's record contains company-issued identification number and issue date.","Non-sensitive PII"
+"employee_ssn","User's government-issued tax identification number required for payroll processing. Individual's record contains nine-digit Social Security Number and verification status.","Sensitive PII"
+"employee_name","User's full legal name used for official documentation and communication. Individual's record contains first name, middle name, and last name.","Non-sensitive PII"
+"employee_salary","User's annual base compensation amount used for payroll calculations. Individual's record contains exact salary figure and pay frequency.","Sensitive PII"
+"employee_bank_account","User's direct deposit account information used for salary disbursement. Individual's record contains bank account number and routing code.","Sensitive PII"
+"employee_phone","User's work contact number used for business communication. Individual's record contains office phone extension and mobile number.","Non-sensitive PII"
+
+Example Set 2 - Authentication Data:
+"login_username","User's system identifier used for application access. Individual's record contains login name and last modified date.","Non-sensitive PII"
+"login_password","User's secret authentication credential required for system access. Individual's record contains encrypted password hash and password history.","Sensitive PII"
+"login_attempts","User's system access tracking information used for security monitoring. Individual's record contains count of failed attempts and timestamps.","Non-sensitive PII"
+"security_question","User's account recovery verification information used for identity confirmation. Individual's record contains challenge questions and encrypted answers.","Sensitive PII"
+
+Example Set 3 - Medical Data:
+"patient_number","User's medical facility identifier used for record management. Individual's record contains hospital-assigned number and registration date.","Non-sensitive PII"
+"patient_condition","User's health status information used for treatment planning. Individual's record contains diagnosed conditions and severity levels.","Sensitive PII"
+"patient_medication","User's prescription information used for treatment administration. Individual's record contains drug names and dosage amounts.","Sensitive PII"
+"patient_allergies","User's adverse reaction information used for medical safety. Individual's record contains allergen list and reaction severity.","Sensitive PII"
+
+BAD Examples (Do Not Generate Like These):
+❌ "employee_details" (too vague, combines multiple pieces of information)
+❌ "login_credentials" (should be separate username and password attributes)
+❌ "medical_information" (too broad, should be specific aspects of medical data)
+
+GOOD Examples (Generate Like These):
+✓ "employee_hire_date" (specific single piece of information)
+✓ "employee_tax_rate" (clear, specific content)
+✓ "employee_department_code" (distinct, atomic attribute)
+
+Label Rules:
+- Mark as "Sensitive PII" if it contains:
+  * Government IDs
+  * Financial account numbers
+  * Passwords/PINs
+  * Medical data
+  * Biometric data
+  * Precise location
+  * Salary information
+- Otherwise, mark as "Non-sensitive PII"
+
+Generate {batch_size} attributes focusing on common business data elements. Make each attribute atomic (representing a single piece of information) and ensure descriptions follow the exact two-sentence format.
+
+Output should be provided in this JSON structure:
+{{
+    "attributes": [
+        {{
+            "attribute_name": "string",
+            "description": "string",
+            "label": "string"
+        }}
+    ]
+}}"""
+    return prompt.format(batch_size=batch_size)
+
+[Rest of the code remains the same]
+
+
+
+
+
 import json
 import csv
 import time
