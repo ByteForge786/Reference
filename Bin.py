@@ -1,3 +1,71 @@
+import json
+import csv
+import time
+import logging
+from typing import List, Dict
+from datetime import datetime
+
+# [Previous logging and rate limiting code remains the same]
+
+def create_llm_prompt(batch_size: int) -> str:
+    prompt = """Task: Generate attribute edge cases where the classification between Sensitive PII and Non-sensitive PII depends on the content detail level and included information.
+
+[Previous context section remains the same]
+
+Format:
+Create specific attributes that clearly indicate their content. Instead of basic/detailed suffixes, name attributes based on what they contain.
+
+Example pairs:
+"investment_holdings","User's publicly traded stock names and quantity of shares held in portfolio","Non-sensitive PII"
+"investment_account_credentials","User's trading account passwords, PINs, and bank account numbers for transaction authorization","Sensitive PII"
+"investment_bank_accounts","User's linked bank account numbers and routing codes for trading activities","Sensitive PII"
+"investment_preferences","User's preferred trading strategies and target market sectors","Non-sensitive PII"
+
+"employee_base_salary","User's annual base compensation amount and pay grade level","Sensitive PII"
+"employee_bonus","User's performance bonus amounts and payment schedules","Sensitive PII"
+"employee_equity_grants","User's stock option details including grant dates and vesting schedules","Sensitive PII"
+"employee_benefits_selection","User's chosen health plan types and coverage categories","Non-sensitive PII"
+"employee_total_compensation","User's complete payment package including all compensation elements and tax details","Sensitive PII"
+
+"medical_provider","User's doctor name and clinic location for appointment scheduling","Non-sensitive PII"
+"medical_diagnosis","User's health condition details and prescribed treatment plans","Sensitive PII"
+"medical_prescriptions","User's medication details including dosage and frequency","Sensitive PII"
+"medical_appointment_time","User's scheduled visit dates and general clinic locations","Non-sensitive PII"
+
+Each entry should follow this structure:
+attribute_name,description,label
+
+Description requirements:
+- Start with "User's" or "Person's" or "Individual's"
+- Provide one comprehensive sentence explaining the content and purpose
+- Don't use words like "sensitive" or "non-sensitive"
+- Include specific examples of included data elements
+- Focus on practical, real-world usage
+
+Please provide the response in JSON format with the following structure for each attribute:
+{
+    "attributes": [
+        {
+            "attribute_name": "string",
+            "description": "string",
+            "label": "string"
+        }
+    ]
+}
+
+Generate {batch_size} attributes covering various business contexts, ensuring each attribute name clearly indicates its specific content.
+"""
+    return prompt.format(batch_size=batch_size)
+
+[Rest of the script remains the same]
+
+
+
+
+
+
+
+
 def process_attributes(input_file: str, output_file: str):
     """Main function to process the CSV file"""
     try:
