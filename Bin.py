@@ -8,6 +8,73 @@ from datetime import datetime
 # [Previous logging and rate limiting code remains the same]
 
 def create_llm_prompt(batch_size: int) -> str:
+    prompt = """Task: Generate granular attributes where the classification between Sensitive PII and Non-sensitive PII depends on the specific content. Each attribute should have a two-sentence description explaining its meaning/purpose and contents.
+
+[Previous context section remains the same]
+
+Format:
+Create separate, specific attributes for each distinct piece of information. Description must contain two sentences: first explaining the attribute's meaning and purpose, second detailing what specific information it contains.
+
+Example groups:
+
+Investment Related:
+"investment_holdings","User's portfolio composition tracked for investment performance analysis and rebalancing decisions. Individual's record contains stock names, number of shares, and current market value allocations.","Non-sensitive PII"
+"investment_username","User's trading platform identifier required for account access and activity tracking. Individual's record contains login name and last access timestamp.","Non-sensitive PII"
+"investment_password","User's authentication credential needed for trading platform security verification. Individual's record contains encrypted password hash and reset history.","Sensitive PII"
+"investment_pin","User's numeric authorization code required for transaction approval and account changes. Individual's record contains encrypted PIN and validation attempts.","Sensitive PII"
+"investment_bank_number","User's financial account identifier used for fund transfers and settlements. Individual's record contains bank account number and routing code.","Sensitive PII"
+"investment_preferences","User's trading strategy settings used for portfolio management and alerts. Individual's record contains preferred sectors, risk tolerance, and investment goals.","Non-sensitive PII"
+
+Employee Compensation:
+"employee_grade","User's organizational level designation used for role classification and access rights. Individual's record contains position band and department hierarchy level.","Non-sensitive PII"
+"employee_base_salary","User's primary compensation amount for standard work duties. Individual's record contains annual salary figure and payment schedule details.","Sensitive PII"
+"employee_bonus_amount","User's performance-based additional compensation tracking for reward distribution. Individual's record contains bonus payment values and distribution dates.","Sensitive PII"
+"employee_stock_units","User's equity compensation grants tracked for vesting and tax purposes. Individual's record contains unit quantities, grant dates, and vesting schedules.","Sensitive PII"
+"employee_benefit_selection","User's chosen insurance and retirement plan options for coverage administration. Individual's record contains selected plan types and coverage categories.","Non-sensitive PII"
+
+Medical Information:
+"medical_provider_name","User's healthcare provider information used for appointment scheduling and referrals. Individual's record contains doctor name, specialty, and clinic affiliation.","Non-sensitive PII"
+"medical_diagnosis","User's health condition information used for treatment planning and care coordination. Individual's record contains condition details, severity levels, and treatment protocols.","Sensitive PII"
+"medical_prescription","User's medication requirements tracked for treatment adherence and refills. Individual's record contains drug names, dosages, frequency, and administration instructions.","Sensitive PII"
+"medical_appointment_time","User's scheduled visit information used for calendar management and reminders. Individual's record contains appointment dates, time slots, and visit durations.","Non-sensitive PII"
+
+Description requirements:
+- First sentence must explain the attribute's meaning and purpose
+- Second sentence must detail the specific information contained
+- Both sentences should start with "User's" or "Person's" or "Individual's"
+- Don't use words like "sensitive" or "non-sensitive"
+- Be specific about the exact data elements included
+- Focus on practical business usage
+
+Please provide the response in JSON format with the following structure:
+{
+    "attributes": [
+        {
+            "attribute_name": "string",
+            "description": "string",
+            "label": "string"
+        }
+    ]
+}
+
+Generate {batch_size} specific attributes covering various business contexts. Keep attributes granular and ensure each description clearly explains both purpose and contents in two distinct sentences.
+"""
+    return prompt.format(batch_size=batch_size)
+
+[Rest of the script remains the same]
+
+
+
+import json
+import csv
+import time
+import logging
+from typing import List, Dict
+from datetime import datetime
+
+# [Previous logging and rate limiting code remains the same]
+
+def create_llm_prompt(batch_size: int) -> str:
     prompt = """Task: Generate attribute edge cases where the classification between Sensitive PII and Non-sensitive PII depends on the content detail level and included information.
 
 [Previous context section remains the same]
