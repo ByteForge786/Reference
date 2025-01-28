@@ -20,8 +20,19 @@ def load_and_preprocess_data(file_path, min_samples=10):
     train_data = []
     test_data = []
     
-    for label in df['label'].unique():
-        label_data = df[df['label'] == label]
+    # Get unique labels and create label mapping
+    unique_labels = sorted(df['label'].unique())
+    label_to_id = {label: idx for idx, label in enumerate(unique_labels)}
+    
+    # Convert string labels to integers
+    df['label'] = df['label'].map(label_to_id)
+    
+    print("\nLabel mapping:")
+    for label, idx in label_to_id.items():
+        print(f"{label} -> {idx}")
+    
+    for label_id in df['label'].unique():
+        label_data = df[df['label'] == label_id]
         if len(label_data) >= min_samples:
             # Take minimum required samples for training
             train_data.append(label_data.head(min_samples))
@@ -40,9 +51,9 @@ def load_and_preprocess_data(file_path, min_samples=10):
     train_dataset = Dataset.from_pandas(train_df)
     test_dataset = Dataset.from_pandas(test_df)
     
-    return train_dataset, test_dataset
+    return train_dataset, test_dataset, label_to_id
 
-def save_model(model, metrics, base_path="models"):
+def save_model(model, metrics, label_to_id, base_path="models"):
     """Save the trained model with metrics"""
     # Create timestamp for unique model naming
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -55,10 +66,11 @@ def save_model(model, metrics, base_path="models"):
     # Save the model
     model.save_pretrained(model_path)
     
-    # Save metadata
+    # Save metadata and label mapping
     metadata = {
         "metrics": metrics,
-        "timestamp": timestamp
+        "timestamp": timestamp,
+        "label_mapping": label_to_id
     }
     
     metadata_path = os.path.join(model_path, "metadata.txt")
@@ -75,10 +87,10 @@ def main():
     np.random.seed(42)
     
     # Load and preprocess data
-    train_dataset, test_dataset = load_and_preprocess_data("your_data.csv")
+    train_dataset, test_dataset, label_to_id = load_and_preprocess_data("your_data.csv")
     
     # Initialize model
-    num_classes = len(set(train_dataset['label']))
+    num_classes = len(label_to_id)
     model = SetFitModel.from_pretrained(
         "BAAI/bge-small-en-v1.5", 
         use_differentiable_head=True, 
@@ -111,7 +123,7 @@ def main():
     print("\nTest metrics:", metrics)
     
     # Save the model
-    save_model(model, metrics)
+    save_model(model, metrics, label_to_id)
 
 if __name__ == "__main__":
     main()
