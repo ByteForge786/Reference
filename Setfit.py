@@ -15,8 +15,9 @@ MODEL_NAME = "sentence-transformers/paraphrase-mpnet-base-v2"  # You can change 
 
 def load_and_preprocess_data(file_path):
     """Load and preprocess the CSV data"""
-    # Read the CSV file
+    # Read the CSV file and shuffle
     df = pd.read_csv(file_path)
+    df = df.sample(frac=1, random_state=RANDOM_STATE).reset_index(drop=True)
     
     # Print original class distribution
     print("\nOriginal class distribution:")
@@ -59,47 +60,45 @@ def prepare_datasets(train_df, test_df):
 
 def train_setfit_model(train_dataset, test_dataset):
     """Train the SetFit model with best model saving"""
-    # Initialize model
-    model = SetFitModel.from_pretrained(MODEL_NAME)
+    # Get number of unique labels
+    num_classes = len(set(train_dataset['label']))
     
-    # Initialize trainer with validation monitoring
+    # Initialize model with classification head
+    model = SetFitModel.from_pretrained(
+        MODEL_NAME,
+        use_differentiable_head=True,  # Use differentiable head for better training
+        head_config={
+            "dropout": 0.1,
+            "num_labels": num_classes,
+            "hidden_dims": [768]  # You can adjust these dimensions
+        }
+    )
+    
+    # Initialize trainer
     trainer = SetFitTrainer(
         model=model,
         train_dataset=train_dataset,
         eval_dataset=test_dataset,
         column_mapping={"text": "text", "label": "label"},
         batch_size=16,
-        num_iterations=20,  # Number of text pairs to generate for contrastive learning
-        num_epochs=3,  # Number of epochs to train
-        metric="accuracy",  # Metric to track for best model
+        num_iterations=20,  # Number of text pairs for contrastive learning
+        num_epochs=3,
+        metric="accuracy",
+        optimizer_parameters={"lr": 2e-5}  # Learning rate
     )
     
-    # Variables to track best model
-    best_accuracy = 0.0
-    best_model = None
+    # Train the model
+    print("\nStarting training...")
+    trainer.train()
     
-    # Custom training loop with validation
-    for epoch in range(trainer.num_epochs):
-        print(f"\nEpoch {epoch + 1}/{trainer.num_epochs}")
-        
-        # Train for one epoch
-        trainer.train_epoch()
-        
-        # Evaluate
-        metrics = trainer.evaluate()
-        current_accuracy = metrics["accuracy"]
-        print(f"Validation Accuracy: {current_accuracy:.4f}")
-        
-        # Save best model
-        if current_accuracy > best_accuracy:
-            best_accuracy = current_accuracy
-            best_model = SetFitModel.from_pretrained(MODEL_NAME)
-            best_model.model_body.load_state_dict(trainer.model.model_body.state_dict())
-            best_model.model_head.load_state_dict(trainer.model.model_head.state_dict())
-            print(f"New best model saved! Accuracy: {best_accuracy:.4f}")
+    # Evaluate
+    metrics = trainer.evaluate()
+    current_accuracy = metrics["accuracy"]
+    print(f"\nFinal Accuracy: {current_accuracy:.4f}")
+    print("\nEvaluation metrics:")
+    print(metrics)
     
-    print(f"\nTraining completed. Best accuracy: {best_accuracy:.4f}")
-    return best_model
+    return model, current_accuracy
 
 def save_model(model, accuracy, base_path="models"):
     """Save the best model with its accuracy score"""
@@ -144,10 +143,10 @@ def main():
     train_dataset, test_dataset = prepare_datasets(train_df, test_df)
     
     # Train model
-    model = train_setfit_model(train_dataset, test_dataset)
+    model, accuracy = train_setfit_model(train_dataset, test_dataset)
     
     # Save model
-    model_path = save_model(model)
+    model_path = save_model(model, accuracy)
 
 if __name__ == "__main__":
     main()
