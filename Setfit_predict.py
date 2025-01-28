@@ -1,13 +1,30 @@
-from setfit import SetFitModel
-import pandas as pd
+from sentence_transformers import SentenceTransformer
 import numpy as np
+import pandas as pd
 from sklearn.metrics import classification_report, accuracy_score
-import torch
-import torch.nn.functional as F
+import pickle
 import os
 
+def load_model_and_head(model_path):
+    """Load both the transformer model and classifier head"""
+    print(f"Loading model from: {model_path}")
+    try:
+        # Load sentence transformer
+        model = SentenceTransformer(model_path)
+        
+        # Load the classifier head
+        head_path = os.path.join(model_path, "model_head.pkl")
+        with open(head_path, 'rb') as f:
+            head = pickle.load(f)
+            
+        print("Model and classifier head loaded successfully")
+        return model, head
+    except Exception as e:
+        print(f"Error loading model: {e}")
+        raise
+
 def load_label_mapping(model_path):
-    """Load the label mapping from metadata file"""
+    """Load label mapping from metadata"""
     metadata_path = os.path.join(model_path, "metadata.txt")
     label_mapping = {}
     
@@ -21,36 +38,37 @@ def load_label_mapping(model_path):
     id_to_label = {v: k for k, v in label_mapping.items()}
     return id_to_label, label_mapping
 
-def get_confidence_scores(model, texts):
-    """Get prediction probabilities using softmax"""
-    # Get model outputs before softmax
-    with torch.no_grad():
-        outputs = model.model_body(texts)
-        logits = model.model_head(outputs)
-        # Apply softmax to get probabilities
-        probs = F.softmax(logits, dim=1)
-    return probs.numpy()
+def predict_texts(model, head, texts, id_to_label):
+    """Make predictions for texts"""
+    # Get embeddings
+    embeddings = model.encode(texts)
+    
+    # Get predictions and probabilities
+    probabilities = head.predict_proba(embeddings)
+    predictions = head.predict(embeddings)
+    
+    # Convert numeric predictions to labels
+    predicted_labels = [id_to_label[pred] for pred in predictions]
+    confidences = np.max(probabilities, axis=1)
+    
+    return predicted_labels, confidences
 
-def predict_single_text(model, text, id_to_label):
+def predict_single(model, head, text, id_to_label):
     """Handle single text prediction"""
-    # Get prediction and confidence
-    probs = get_confidence_scores(model, [text])
-    pred_id = np.argmax(probs[0])
-    confidence = probs[0][pred_id]
-    predicted_label = id_to_label[pred_id]
+    predicted_labels, confidences = predict_texts(model, head, [text], id_to_label)
     
     print("\nPrediction Results:")
     print(f"Text: {text}")
-    print(f"Predicted Label: {predicted_label}")
-    print(f"Confidence: {confidence:.4f}")
+    print(f"Predicted Label: {predicted_labels[0]}")
+    print(f"Confidence: {confidences[0]:.4f}")
     
     return {
-        'predicted_label': predicted_label,
-        'confidence': confidence
+        'predicted_label': predicted_labels[0],
+        'confidence': confidences[0]
     }
 
-def predict_csv(model, file_path, id_to_label, label_mapping):
-    """Handle CSV batch prediction and evaluation"""
+def predict_csv(model, head, file_path, id_to_label, label_mapping):
+    """Handle CSV batch prediction"""
     # Read CSV
     df = pd.read_csv(file_path)
     
@@ -60,24 +78,19 @@ def predict_csv(model, file_path, id_to_label, label_mapping):
     texts = df['text'].tolist()
     has_labels = 'label' in df.columns
     
-    # Get predictions and confidence scores
-    probs = get_confidence_scores(model, texts)
-    pred_ids = np.argmax(probs, axis=1)
-    confidences = [probs[i][pred_id] for i, pred_id in enumerate(pred_ids)]
-    predicted_labels = [id_to_label[pred_id] for pred_id in pred_ids]
+    # Get predictions
+    print("\nGenerating predictions...")
+    predicted_labels, confidences = predict_texts(model, head, texts, id_to_label)
     
-    # Add predictions and confidence to DataFrame
+    # Add predictions to dataframe
     df['predicted_label'] = predicted_labels
     df['confidence'] = confidences
     
-    # If true labels exist, calculate metrics
+    # Calculate metrics if true labels exist
     if has_labels:
         print("\nClassification Report:")
-        true_ids = [label_mapping[label] for label in df['label']]
-        print(classification_report(true_ids, pred_ids, 
-                                 target_names=list(label_mapping.keys())))
+        print(classification_report(df['label'], df['predicted_label']))
         
-        # Per-label accuracy
         print("\nPer-Label Metrics:")
         for label in label_mapping.keys():
             label_mask = df['label'] == label
@@ -91,7 +104,7 @@ def predict_csv(model, file_path, id_to_label, label_mapping):
                 print(f"  Accuracy: {label_acc:.4f}")
                 print(f"  Count: {label_count}")
     
-    # Save augmented CSV
+    # Save results
     output_path = file_path.rsplit('.', 1)[0] + '_predictions.csv'
     df.to_csv(output_path, index=False)
     print(f"\nPredictions saved to: {output_path}")
@@ -100,23 +113,20 @@ def predict_csv(model, file_path, id_to_label, label_mapping):
 
 def main():
     import argparse
-    
     parser = argparse.ArgumentParser(description='SetFit Model Prediction')
     parser.add_argument('--model_path', required=True, help='Path to the saved model directory')
     parser.add_argument('--input', required=True, help='Input text or CSV file path')
     args = parser.parse_args()
     
-    # Load model and label mapping
-    model = SetFitModel.from_pretrained(args.model_path)
+    # Load model, head and label mapping
+    model, head = load_model_and_head(args.model_path)
     id_to_label, label_mapping = load_label_mapping(args.model_path)
     
-    # Determine input type and process accordingly
+    # Process input
     if args.input.endswith('.csv'):
-        # Batch prediction on CSV
-        results = predict_csv(model, args.input, id_to_label, label_mapping)
+        results = predict_csv(model, head, args.input, id_to_label, label_mapping)
     else:
-        # Single text prediction
-        results = predict_single_text(model, args.input, id_to_label)
+        results = predict_single(model, head, args.input, id_to_label)
 
 if __name__ == "__main__":
     main()
